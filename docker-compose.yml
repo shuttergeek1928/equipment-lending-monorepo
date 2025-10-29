@@ -1,0 +1,72 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: \${POSTGRES_USER:-appuser}
+      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD:-apppass}
+      POSTGRES_DB: \${POSTGRES_DB:-equipmentdb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  java-auth:
+    build: ./services/java-auth
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  java-equipment:
+    build: ./services/java-equipment
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+
+  dotnet-borrow:
+    build: ./services/dotnet-borrow
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "8083:80"
+    restart: unless-stopped
+
+  dotnet-dashboard:
+    build: ./services/dotnet-dashboard
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - "8084:80"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    environment:
+      - REACT_APP_AUTH_BASE=http://localhost:8081/api
+      - REACT_APP_EQUIPMENT_BASE=http://localhost:8082/api
+      - REACT_APP_BORROW_BASE=http://localhost:8083/api
+      - REACT_APP_DASHBOARD_BASE=http://localhost:8084/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - java-auth
+      - java-equipment
+      - dotnet-borrow
+      - dotnet-dashboard
+    restart: unless-stopped
+
+volumes:
+  pgdata:
