@@ -1,16 +1,11 @@
-DROP TABLE public.UserTypes CASCADE ;
-DROP TABLE public.Users CASCADE;
-DROP TABLE public.Equipments CASCADE;
-DROP TABLE public.BorrowingsAndReturns CASCADE;
-
 CREATE TABLE IF NOT EXISTS public.UserTypes(
-	TypeId INT PRIMARY KEY ,
+	TypeId SMALLSERIAL PRIMARY KEY ,
 	TypeValue varchar(100) UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.Users(
 	ID UUID PRIMARY KEY,
-	UserId INT UNIQUE NOT NULL,
+	UserId SERIAL UNIQUE NOT NULL,
 	UserName varchar(255) NOT NULL,
 	Email varchar(255) UNIQUE NOT NULL,
 	PasswordHash varchar(255) NOT NULL,

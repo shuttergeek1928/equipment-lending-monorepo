@@ -1,0 +1,6 @@
+@EquipmentLendingDotnetServices_HostAddress = http://localhost:5191
+
+GET {{EquipmentLendingDotnetServices_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
