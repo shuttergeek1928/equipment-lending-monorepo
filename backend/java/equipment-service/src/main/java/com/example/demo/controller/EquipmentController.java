@@ -18,13 +18,11 @@ public class EquipmentController {
     @Autowired
     private EquipmentRepository equipmentRepository;
 
-    // Anyone can view equipment
     @GetMapping
     public List<Equipment> getAllEquipment() {
         return equipmentRepository.findAll();
     }
 
-    // Anyone can view a single item
     @GetMapping("/{id}")
     public ResponseEntity<Equipment> getEquipmentById(@PathVariable Long id) {
         return equipmentRepository.findById(id)
@@ -32,7 +30,6 @@ public class EquipmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Only an ADMIN can add new equipment
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Equipment addEquipment(@Valid @RequestBody Equipment equipment) {
@@ -41,7 +38,6 @@ public class EquipmentController {
         return equipmentRepository.save(equipment);
     }
 
-    // Only an ADMIN can update equipment
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Equipment> updateEquipment(@PathVariable Long id, @Valid @RequestBody Equipment equipmentDetails) {
@@ -58,7 +54,6 @@ public class EquipmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Only an ADMIN can delete equipment
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteEquipment(@PathVariable Long id) {
