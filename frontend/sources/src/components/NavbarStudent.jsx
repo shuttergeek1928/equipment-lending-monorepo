@@ -18,6 +18,7 @@ function NavbarStudent() {
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item"><Link className="nav-link" to="/equipmentdashboard">Dashboard</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/requests">Borrow Requests</Link></li>
+            <li className="nav-item"><Link className="nav-link" to="/notifications">Notifications</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/logout">Logout</Link></li>
           </ul>
         </div>

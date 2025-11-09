@@ -1,13 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
 
 // import other navbars
 import NavbarAdmin from "./NavbarAdmin";
 import NavbarStaff from "./NavbarStaff";
 import NavbarStudent from "./NavbarStudent";
-
 
 function Navbar() {
 
@@ -39,7 +36,7 @@ function Navbar() {
       <div className="container-fluid">
         <Link className="navbar-brand d-flex align-items-center" to="/">
           <img
-            src="/Logo.png"    // 
+            src="/Logo.png" 
             width="40"
             height="40"
             className="d-inline-block align-top me-2"

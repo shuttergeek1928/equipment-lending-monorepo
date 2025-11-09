@@ -14,6 +14,8 @@ import EquipmentDashboard from './pages/EquipmentDashboard';
 import BorrowingRequests from "./pages/BorrowingRequests";
 import EquipmentManagement from './pages/EquipmentManagement';
 import Logout from "./pages/Logout";
+import DueDateTracking from "./pages/DueDateTracking";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (    
@@ -27,6 +29,8 @@ function App() {
           <Route path="/equipmentdashboard" element={<EquipmentDashboard />} />
           <Route path="/requests" element={<BorrowingRequests />} />
           <Route path="/equipmentmanagement" element={<EquipmentManagement />} />
+          <Route path="/tracking" element={<DueDateTracking />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/logout" element={<Logout />} />
         </Routes>
       </div>

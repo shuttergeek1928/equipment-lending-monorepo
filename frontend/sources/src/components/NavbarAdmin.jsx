@@ -19,6 +19,7 @@ function NavbarAdmin() {
             <li className="nav-item"><Link className="nav-link" to="/equipmentdashboard">Dashboard</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/requests">Borrow Requests</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/equipmentmanagement">Manage Equipments</Link></li>
+            <li className="nav-item"><Link className="nav-link" to="/tracking">Due Date Tracking</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/logout">Logout</Link></li>
           </ul>
         </div>
