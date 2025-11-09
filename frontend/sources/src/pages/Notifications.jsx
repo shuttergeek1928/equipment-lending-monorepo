@@ -36,6 +36,12 @@ export default function Notifications() {
   return (
     <div className="container-center">
       <div className="card" style={{ width: "90%", maxWidth: "1000px" }}>
+        <img
+          src="https://images.unsplash.com/photo-1453928582365-b6ad33cbcf64?auto=format&fit=crop&w=1200&q=80"
+          alt="Teal notification bell illustration"
+          className="notify-banner"
+          loading="lazy"
+        />
         <h2 className="title">Notifications</h2>
 
         <div className="table-wrapper">

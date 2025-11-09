@@ -159,6 +159,12 @@ export default function BorrowingRequests() {
   return (
     <div className="container-center">
       <div className="card" style={{ width: "90%", maxWidth: "1000px" }}>
+        <img
+          src="https://plus.unsplash.com/premium_photo-1723481535670-7365331c9b4e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2340"
+          alt="Students sharing books for borrowing"
+          className="borrowing-banner"
+          loading="lazy"
+        />
         <h2 className="title">Borrowing & Return Management</h2>
 
         {/* STUDENT — Request Form */}
