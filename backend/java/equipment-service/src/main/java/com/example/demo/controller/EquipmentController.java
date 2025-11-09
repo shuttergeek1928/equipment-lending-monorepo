@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -24,31 +25,39 @@ public class EquipmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Equipment> getEquipmentById(@PathVariable Long id) {
+    public ResponseEntity<Equipment> getEquipmentById(@PathVariable UUID id) {
         return equipmentRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public Equipment addEquipment(@Valid @RequestBody Equipment equipment) {
-        // When creating, available quantity equals total quantity
+
+
         equipment.setAvailableQuantity(equipment.getTotalQuantity());
+        equipment.setAvailable(equipment.getTotalQuantity() > 0);
         return equipmentRepository.save(equipment);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Equipment> updateEquipment(@PathVariable Long id, @Valid @RequestBody Equipment equipmentDetails) {
+    public ResponseEntity<Equipment> updateEquipment(@PathVariable UUID id, @Valid @RequestBody Equipment equipmentDetails) { // <-- Change from Long
         return equipmentRepository.findById(id)
                 .map(equipment -> {
-                    equipment.setName(equipmentDetails.getName());
+
+                    equipment.setEquipmentName(equipmentDetails.getEquipmentName());
                     equipment.setCategory(equipmentDetails.getCategory());
-                    equipment.setCondition(equipmentDetails.getCondition());
+                    equipment.setEquipmentCondition(equipmentDetails.getEquipmentCondition());
                     equipment.setTotalQuantity(equipmentDetails.getTotalQuantity());
-                    // You might need more complex logic here for availableQuantity
                     equipment.setAvailableQuantity(equipmentDetails.getAvailableQuantity());
+
+
+                    equipment.setAvailable(equipmentDetails.getAvailableQuantity() > 0);
+
+
                     return ResponseEntity.ok(equipmentRepository.save(equipment));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -56,7 +65,7 @@ public class EquipmentController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteEquipment(@PathVariable Long id) {
+    public ResponseEntity<?> deleteEquipment(@PathVariable UUID id) {
         return equipmentRepository.findById(id)
                 .map(equipment -> {
                     equipmentRepository.delete(equipment);
