@@ -16,33 +16,25 @@ export default function Signup() {
     setMessage(null);
 
     try {
-      // fetch the response after post
-      const response = await fetch("http://localhost:8081/api/auth/signup", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, email, password, role: [role]}),
-      });
-
-      // check if response is okay and store token or user info if needed
-      if (response.ok) {
-        const data = await response.json();
-        setMessage(data.message || "User registered successfully!");
-        console.log("Signup success:", data);
-
-        //Redirect to login page on successful signup
-        navigate("/login");
-      }   
-
-      // check if response is not okay and throw error
-      if (!response.ok) {
-        const errData = await response.json().catch(() => null);
-        throw new Error(errData?.message || "Signup failed");
-      }      
-    } 
-    catch (err) {
-      setError(err.message);
-      console.error("Signup error:", err);
-    }
+  const response = await fetch("http://localhost:8081/api/auth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password, role: [role] }),
+  });
+ 
+  const data = await response.json().catch(() => null); // read once safely
+ 
+  if (response.ok) {
+    setMessage(data?.message || "User registered successfully!");
+    console.log("Signup success:", data);
+    navigate("/login");
+  } else {
+    throw new Error(data?.message || "Signup failed");
+  }
+} catch (err) {
+  setError(err.message);
+  console.error("Signup error:", err);
+}
   };
 
   // html page structure
