@@ -36,13 +36,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                username, // We can use the username string as the principal
-                                null,     // No credentials
-                                authorities); // The roles extracted from the token
+                                username,
+                                null,
+                                authorities);
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Set the authentication in the Spring Security context
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
