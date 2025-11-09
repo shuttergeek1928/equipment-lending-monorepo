@@ -23,8 +23,8 @@ public class Equipment {
     @Column(name = "Id") // Maps to 'Id'
     private UUID id;
 
-    @Column(name = "EquipmentId", unique = true)
-    private Integer equipmentId;
+    //@Column(name = "EquipmentId")
+    //private Integer equipmentId;
 
     @NotBlank
     @Column(name = "EquipmentName")
