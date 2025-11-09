@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Equipment;
+import com.example.demo.model.EquipmentCreateDTO;
+import com.example.demo.model.EquipmentUpdateDTO;
 import com.example.demo.repository.EquipmentRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,34 +33,40 @@ public class EquipmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Equipment addEquipment(@Valid @RequestBody Equipment equipment) {
+    public Equipment addEquipment(@Valid @RequestBody EquipmentCreateDTO dto) {
 
+        Equipment newEquipment = new Equipment();
 
-        equipment.setAvailableQuantity(equipment.getTotalQuantity());
-        equipment.setAvailable(equipment.getTotalQuantity() > 0);
-        return equipmentRepository.save(equipment);
+        newEquipment.setEquipmentName(dto.getEquipmentName());
+        newEquipment.setCategory(dto.getCategory());
+        newEquipment.setEquipmentCondition(dto.getEquipmentCondition());
+        newEquipment.setTotalQuantity(dto.getTotalQuantity());
+
+        newEquipment.setAvailableQuantity(dto.getTotalQuantity());
+        newEquipment.setAvailable(dto.getTotalQuantity() > 0);
+        return equipmentRepository.save(newEquipment);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Equipment> updateEquipment(@PathVariable UUID id, @Valid @RequestBody Equipment equipmentDetails) { // <-- Change from Long
+    public ResponseEntity<Equipment> updateEquipment(@PathVariable UUID id,
+                                                     @Valid @RequestBody EquipmentUpdateDTO dto) {
+
         return equipmentRepository.findById(id)
-                .map(equipment -> {
+                .map(existingEquipment -> {
 
-                    equipment.setEquipmentName(equipmentDetails.getEquipmentName());
-                    equipment.setCategory(equipmentDetails.getCategory());
-                    equipment.setEquipmentCondition(equipmentDetails.getEquipmentCondition());
-                    equipment.setTotalQuantity(equipmentDetails.getTotalQuantity());
-                    equipment.setAvailableQuantity(equipmentDetails.getAvailableQuantity());
+                    existingEquipment.setEquipmentName(dto.getEquipmentName());
+                    existingEquipment.setCategory(dto.getCategory());
+                    existingEquipment.setEquipmentCondition(dto.getEquipmentCondition());
+                    existingEquipment.setTotalQuantity(dto.getTotalQuantity());
+                    existingEquipment.setAvailableQuantity(dto.getAvailableQuantity());
 
+                    existingEquipment.setAvailable(dto.getAvailableQuantity() > 0);
 
-                    equipment.setAvailable(equipmentDetails.getAvailableQuantity() > 0);
-
-
-                    return ResponseEntity.ok(equipmentRepository.save(equipment));
+                    Equipment updatedEquipment = equipmentRepository.save(existingEquipment);
+                    return ResponseEntity.ok(updatedEquipment);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
