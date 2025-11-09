@@ -5,7 +5,7 @@ export default function DueDateTracking() {
 
   // fetch the logged in role and user
   const [role] = useState(localStorage.getItem("roles"));
-  const [user] = useState(localStorage.getItem("username"));
+  const [userId] = useState(localStorage.getItem("userId"));
 
   // state management
   const [borrowings, setBorrowings] = useState([]);
@@ -19,7 +19,8 @@ export default function DueDateTracking() {
   const fetchBorrowings = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/requests");
+      const res = await axios.get(`${BASE_URL}/borrowings`);
+
       // ensure data is always array
       const data = Array.isArray(res.data)
         ? res.data

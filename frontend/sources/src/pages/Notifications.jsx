@@ -3,49 +3,35 @@ import { useEffect, useState } from "react";
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [role] = useState(localStorage.getItem("roles") || "ROLE_STUDENT");
-
-  // ✅ Mock backend-style data
-  const mockNotifications = [
-    {
-      id: "a1b2c3",
-      borrowRequestId: 101,
-      notifiedAt: "2025-11-05T10:30:00Z",
-      channel: "email",
-      status: "sent",
-      attempts: 1,
-      message:
-        "Dear John Doe, your borrowed equipment (Request ID: 101) is overdue since 2025-11-01.",
-    },
-    {
-      id: "d4e5f6",
-      borrowRequestId: 102,
-      notifiedAt: "2025-11-07T08:20:00Z",
-      channel: "email",
-      status: "sent",
-      attempts: 2,
-      message:
-        "Reminder: Equipment 'Tripod Stand' is due for return on 2025-11-09.",
-    },
-    {
-      id: "g7h8i9",
-      borrowRequestId: 103,
-      notifiedAt: "2025-11-08T11:15:00Z",
-      channel: "email",
-      status: "failed",
-      attempts: 5,
-      message:
-        "System failed to send overdue notification for Request ID: 103 after multiple attempts.",
-    },
-  ];
-
+  const userId = localStorage.getItem("userId");
+  
   useEffect(() => {
-    // simulate backend API call
-    setTimeout(() => {
-      setNotifications(mockNotifications);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const fetchNotifications = async () => {
+      try {
+        // API endpoint 
+        const response = await axios.get(
+          `http://localhost:5000/api/notifications/user/${userId}`
+        );
+
+        if (response.data && Array.isArray(response.data)) {
+          setNotifications(response.data);
+        } else {
+          setNotifications([]);
+        }
+      } 
+      catch (err) {
+        console.error("Error fetching notifications:", err);
+        setError("Failed to load notifications.");
+      } 
+      finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [userId]);
 
   return (
     <div className="container-center">

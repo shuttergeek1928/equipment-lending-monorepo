@@ -4,7 +4,8 @@ import api from "axios"; // axios instance
 export default function EquipmentManagement() {
   // fetch the logged in role and user
   const [role] = useState(localStorage.getItem("roles") || "ROLE_STUDENT");
-  const [user] = useState(localStorage.getItem("username"));
+  const [userId] = useState(localStorage.getItem("userId"));
+  const [token] = useState(localStorage.getItem("token")); 
 
   // State management
   const [equipmentList, setEquipmentList] = useState([]);
@@ -27,7 +28,7 @@ export default function EquipmentManagement() {
   const fetchEquipment = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/dashboard/available?isAvailable=true");
+      const res = await axios.get("http://localhost:8084/api/dashboard/available?isAvailable=true");
       const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.data)
@@ -54,17 +55,22 @@ export default function EquipmentManagement() {
     const payload = {
       EquipmentName: newEquipment.EquipmentName,
       AvailableQuantity: newEquipment.AvailableQuantity,
+      AddedOn: new Date().toISOString().split("T")[0],
     };
 
     try {
-      // Replace with real endpoint 
-      await api.post("/equipment", payload);
-      alert("Equipment added successfully!");
-      fetchEquipment();
-    } 
+      const response = await fetch("http://localhost:8081/api/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    }
     catch (err) {
       console.warn("Add equipment failed:", err);
-      alert("Backend endpoint for adding equipment not available yet.");
+      alert("Add equipment failed.");
     }
 
     setNewEquipment({ EquipmentName: "", AvailableQuantity: 1 });

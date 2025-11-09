@@ -12,8 +12,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   // Backend URL
-  const BASE_URL = "https://localhost:7124/api";
-  const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
+  const BASE_URL = "http://localhost:8084/api";
 
   // Fetch dashboard summary + equipment list
   useEffect(() => {
@@ -28,7 +27,7 @@ export default function DashboardPage() {
 
         // Fetch all equipment (or only available if needed)
         const equipmentRes = await axios.get(`${BASE_URL}/dashboard/available`, {
-          params: {isAvailable: true},
+          params: {IsAvailable: true},
           headers: {Accept: "application/json"}
         });
 
@@ -77,6 +76,7 @@ export default function DashboardPage() {
     acc[item.Category] = (acc[item.Category] || 0) + 1;
     return acc;
   }, {});
+
   // html page structure
   return (
     <div className="dashboard-container">

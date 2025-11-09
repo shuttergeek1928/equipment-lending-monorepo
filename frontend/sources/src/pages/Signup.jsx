@@ -16,7 +16,7 @@ export default function Signup() {
     setMessage(null);
 
     try {
-      // fetch the response
+      // fetch the response after post
       const response = await fetch("http://localhost:8081/api/auth/signup", {
         method: "POST",
         headers: {"Content-Type": "application/json"},

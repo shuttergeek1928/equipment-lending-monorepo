@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
-import api from "axios"; // axios instance
+import axios from "axios"; // axios instance
 
 export default function BorrowingRequests() {
   // fetch the logged in role and user
   const [role] = useState(localStorage.getItem("roles") || "ROLE_STUDENT");
-  const [user] = useState(localStorage.getItem("username"));
+  const [userId] = useState(localStorage.getItem("userId"));
+  const [token] = useState(localStorage.getItem("token")); 
 
   // State management
   const [equipmentList, setEquipmentList] = useState([]);
   const [requests, setRequests] = useState([]);
   const [newRequest, setNewRequest] = useState({ EquipmentId: "", RequestedQuantity: 1 });
-  const [newEquipment, setNewEquipment] = useState({ EquipmentName: "", AvailableQuantity: 1 });
   const [loading, setLoading] = useState(false);
 
-  const currentUser = { id: 101, name: "Alice" }; // mock current user
+  //const currentUser = { id: 101, name: "Alice" }; // mock current user
 
   // Backend URL
-  //const BASE_URL = "https://localhost:7124/api";
-  //const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
+  const BASE_URL = "https://localhost:8083/api";
 
   // Load borrowings and equipment
   useEffect(() => {
@@ -29,7 +28,8 @@ export default function BorrowingRequests() {
   const fetchBorrowings = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/requests");
+      const res = await axios.get(`${BASE_URL}/borrowings`);
+
       // ensure data is always array
       const data = Array.isArray(res.data)
         ? res.data
@@ -50,7 +50,8 @@ export default function BorrowingRequests() {
   // fetch equipments
   const fetchEquipment = async () => {
     try {
-      const res = await api.get("/dashboard/available?isAvailable=true");
+      //const res = await api.get("/dashboard/available?isAvailable=true");
+      const res = await axios.get("http://localhost:8084/api/dashboard/available?isAvailable=true");
       const data = Array.isArray(res.data)
         ? res.data
         : Array.isArray(res.data.data)
@@ -75,18 +76,28 @@ export default function BorrowingRequests() {
     // set the payload data
     const payload = {
       EquipmentId: Number(newRequest.EquipmentId),
-      RequesterId: currentUser.id, // need to check this and see how is request id set?
+      RequesterId: userId, 
       RequestedQuantity: Number(newRequest.RequestedQuantity),
       RequestedOn: new Date().toISOString().split("T")[0],
     };
 
     try {
-      // sending payload data in post
-      await api.post("/request", payload);
-      alert("Request submitted successfully!");
-      setNewRequest({ EquipmentId: "", RequestedQuantity: 1 });
-      fetchBorrowings();
-    } 
+      const response = await fetch("http://localhost:8081/api/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (response.ok) {
+        alert("Request submitted successfully!");
+        setNewRequest({ EquipmentId: "", RequestedQuantity: 1 });
+        fetchBorrowings();
+      }
+    }
+
     catch (err) {
       const msg =
         err?.response?.data?.error?.message || err.message || "Unknown error";
@@ -98,23 +109,40 @@ export default function BorrowingRequests() {
   // STAFF / ADMIN — Approve request
   const handleApprove = async (RequestId) => {
     try {
-      await api.put(`/approve/${RequestId}`);
-      alert("Request approved!");
-      fetchBorrowings();
+      const response = await fetch(`http://localhost:8083/api/approve/${RequestId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, 
+      },
+    });
+
+      if (response.ok) {
+        alert("Request approved!");
+        fetchBorrowings(); //
+      } 
     } 
     catch (err) {
       alert("Error approving request: " + err.message);
     }
   };
 
-  // STAFF / ADMIN - Reject request - need separate ?
+  // STAFF / ADMIN - Reject request
 
   // STAFF / ADMIN — Mark returned
   const handleReturn = async (RequestId) => {
     try {
-      await api.put(`/return/${RequestId}`);
-      alert("Marked as returned!");
-      fetchBorrowings();
+      const response = await fetch(`http://localhost:8083/api/retuen/${RequestId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, 
+        },
+      });
+      if (response.ok) {
+        alert("Request approved!");
+        fetchBorrowings(); 
+      } 
     } 
     catch (err) {
       alert("Error marking as returned: " + err.message);
