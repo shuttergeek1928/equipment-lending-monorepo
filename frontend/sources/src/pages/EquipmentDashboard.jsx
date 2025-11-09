@@ -12,8 +12,7 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   // Backend URL
-  const BASE_URL = "https://localhost:7124/api";
-  const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
+  const BASE_URL = "http://localhost:8084/api";
 
   // Fetch dashboard summary + equipment list
   useEffect(() => {
@@ -28,26 +27,22 @@ export default function DashboardPage() {
 
         // Fetch all equipment (or only available if needed)
         const equipmentRes = await axios.get(`${BASE_URL}/dashboard/available`, {
-          params: {
-            isAvailable: true
-          },
-          headers: {
-            Accept: "application/json"
-          }
+          params: {IsAvailable: true},
+          headers: {Accept: "application/json"}
         });
-
 
         setDashboard(dashboardRes.data);
         setEquipmentList(equipmentRes.data);
         setFilteredList(equipmentRes.data);
-      } catch (err) {
+      } 
+      catch (err) {
         console.error("Error fetching dashboard:", err);
         setError("Failed to load dashboard data. Please try again later.");
-      } finally {
+      } 
+      finally {
         setLoading(false);
       }
     }
-
     fetchDashboardData();
   }, []);
 
@@ -77,6 +72,12 @@ export default function DashboardPage() {
   if (error) return <div className="text-center text-red">{error}</div>;
   if (!dashboard) return <div>No dashboard data available.</div>;
 
+  const categoryCount = equipmentList.reduce((acc, item) => {
+    acc[item.Category] = (acc[item.Category] || 0) + 1;
+    return acc;
+  }, {});
+
+  // html page structure
   return (
     <div className="dashboard-container">
       {/* LEFT PANEL — Dashboard Summary */}
@@ -86,24 +87,24 @@ export default function DashboardPage() {
         <div className="summary-row">
           <div className="summary-box total">
             <h4>Total</h4>
-            <p className="count">{dashboard.totalEquipment}</p>
+            <p className="count">{dashboard.TotalQuantity}</p>
           </div>
           <div className="summary-box available">
             <h4>Available</h4>
-            <p className="count">{dashboard.availableCount}</p>
+            <p className="count">{dashboard.AvailableQuantity}</p>
           </div>
           <div className="summary-box lent">
             <h4>Lent Out</h4>
-            <p className="count">{dashboard.lentOutCount}</p>
+            <p className="count">{dashboard.TotalQuantity - dashboard.AvailableQuantity}</p>
           </div>
         </div>
 
         <h3 className="subtitle">By Category</h3>
         <ul className="category-list">
-          {dashboard.byCategory?.map((item, i) => (
-            <li key={i} className="list-item">
-              <span>{item.category}</span>
-              <span className="badge">{item.count}</span>
+          {Object.entries(categoryCount).map(([category, count]) => (
+            <li key={category} className="list-item">
+              <span>{category}</span>
+              <span className="badge">{count}</span>
             </li>
           ))}
         </ul>
@@ -153,27 +154,35 @@ export default function DashboardPage() {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Category</th>
+                <th>Condition</th>
+                <th>Total Qty</th>
+                <th>Available Qty</th>
                 <th>Availability</th>
+                <th>Added On</th>
               </tr>
             </thead>
             <tbody>
               {filteredList.length > 0 ? (
                 filteredList.map((eq) => (
-                  <tr key={eq.id}>
-                    <td>{eq.id}</td>
-                    <td>{eq.name}</td>
-                    <td>{eq.category}</td>
+                  <tr key={eq.EquipmentId}>
+                    <td>{eq.EquipmentId}</td>
+                    <td>{eq.EquipmentName}</td>
+                    <td>{eq.Category}</td>
+                    <td>{eq.Condition}</td>
+                    <td>{eq.TotalQuantity}</td>
+                    <td>{eq.AvailableQuantity}</td>
                     <td>
                       <span
                         className={`status-badge ${
-                          eq.available
+                          eq.isAvailable
                             ? "available-badge"
                             : "unavailable-badge"
                         }`}
                       >
-                        {eq.available ? "Available" : "Unavailable"}
+                        {eq.isAvailable ? "Available" : "Unavailable"}
                       </span>
                     </td>
+                    <td>{eq.AddedOn}</td>
                   </tr>
                 ))
               ) : (

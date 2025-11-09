@@ -1,9 +1,11 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom"; // used for redirection
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState("ROLE_STUDENT");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -14,32 +16,36 @@ export default function Signup() {
     setMessage(null);
 
     try {
+      // fetch the response after post
       const response = await fetch("http://localhost:8081/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          role: [role],
-        }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, email, password, role: [role]}),
       });
 
+      // check if response is okay and store token or user info if needed
+      if (response.ok) {
+        const data = await response.json();
+        setMessage(data.message || "User registered successfully!");
+        console.log("Signup success:", data);
+
+        //Redirect to login page on successful signup
+        navigate("/login");
+      }   
+
+      // check if response is not okay and throw error
       if (!response.ok) {
         const errData = await response.json().catch(() => null);
         throw new Error(errData?.message || "Signup failed");
-      }
-
-      const data = await response.json();
-      setMessage(data.message || "User registered successfully!");
-      console.log("Signup success:", data);
-    } catch (err) {
+      }      
+    } 
+    catch (err) {
       setError(err.message);
       console.error("Signup error:", err);
     }
   };
 
+  // html page structure
   return (
     <div className="container-center">
       <div className="card">
@@ -55,7 +61,15 @@ export default function Signup() {
             placeholder="Choose a username"
             required
           />
-
+          <label className="label">Email</label>
+          <input
+            type="email"
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email address"
+            required
+          />
           <label className="label">Password</label>
           <input
             type="password"
@@ -65,7 +79,6 @@ export default function Signup() {
             placeholder="Choose a password"
             required
           />
-
           <label className="label">Role</label>
           <select
             className="input"
