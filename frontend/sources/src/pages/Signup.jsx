@@ -36,11 +36,20 @@ export default function Signup() {
       // check if response is not okay and throw error
       if (!response.ok) {
         const errData = await response.json().catch(() => null);
-        throw new Error(errData?.message || "Signup failed");
+        const defaultMessage =
+          response.status >= 500
+            ? "Signup service is unavailable. Please ensure all backend services are running."
+            : "Signup failed";
+        throw new Error(errData?.message || defaultMessage);
       }      
     } 
     catch (err) {
-      setError(err.message);
+      const unreachableService =
+        err.name === "TypeError" && err.message === "Failed to fetch";
+      const errorMessage = unreachableService
+        ? "Unable to reach signup service. Please confirm required services are running."
+        : err.message;
+      setError(errorMessage);
       console.error("Signup error:", err);
     }
   };

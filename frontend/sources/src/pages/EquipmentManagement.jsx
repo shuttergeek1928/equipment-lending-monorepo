@@ -94,6 +94,12 @@ export default function EquipmentManagement() {
   return (
     <div className="container-center">
       <div className="card" style={{ width: "90%", maxWidth: "1000px" }}>
+        <img
+          src="https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&w=1200&q=80"
+          alt="Organized shelves with electronics and lab equipment"
+          className="equipment-banner"
+          loading="lazy"
+        />
         <h2 className="title">Equipment Management</h2>
         
         {/* ADMIN — Manage Equipment */}

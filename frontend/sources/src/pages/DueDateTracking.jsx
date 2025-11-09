@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import api from "axios";
 
 export default function DueDateTracking() {
+  const calendarImage =
+    "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1200&q=80";
 
   // fetch the logged in role and user
   const [role] = useState(localStorage.getItem("roles"));
@@ -68,6 +70,12 @@ export default function DueDateTracking() {
   return (
     <div className="container-center">
       <div className="card" style={{ width: "90%", maxWidth: "1000px" }}>
+        <img
+          src={calendarImage}
+          alt="Calendar illustration"
+          className="due-calendar due-calendar--top"
+          loading="lazy"
+        />
         <h2 className="title">Due Date Tracking</h2>
 
         {/* TRACKING TABLE */}
