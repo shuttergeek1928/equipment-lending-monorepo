@@ -1,0 +1,6 @@
+@EquipmentLendingService_HostAddress = http://localhost:5140
+
+GET {{EquipmentLendingService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
