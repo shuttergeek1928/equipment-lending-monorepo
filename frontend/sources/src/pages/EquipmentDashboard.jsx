@@ -1,190 +1,240 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "axios"; // axios instance
 
-export default function DashboardPage() {
-  const [dashboard, setDashboard] = useState(null);
+export default function BorrowingRequests() {
+  // fetch the logged in role and user
+  const [role] = useState(localStorage.getItem("roles") || "ROLE_STUDENT");
+  const [user] = useState(localStorage.getItem("username"));
+
+  // State management
   const [equipmentList, setEquipmentList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [availability, setAvailability] = useState("All");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [requests, setRequests] = useState([]);
+  const [newRequest, setNewRequest] = useState({ EquipmentId: "", RequestedQuantity: 1 });
+  const [newEquipment, setNewEquipment] = useState({ EquipmentName: "", AvailableQuantity: 1 });
+  const [loading, setLoading] = useState(false);
+
+  const currentUser = { id: 101, name: "Alice" }; // mock current user
 
   // Backend URL
-  const BASE_URL = "https://localhost:7124/api";
-  const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
+  //const BASE_URL = "https://localhost:7124/api";
+  //const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
 
-  // Fetch dashboard summary + equipment list
+  // Load borrowings and equipment
   useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setLoading(true);
-
-        // Fetch dashboard summary
-        const dashboardRes = await axios.get(`${BASE_URL}/dashboard`, {
-          headers: { Accept: "application/json" },
-        });
-
-        // Fetch all equipment (or only available if needed)
-        const equipmentRes = await axios.get(`${BASE_URL}/dashboard/available`, {
-          params: {
-            isAvailable: true
-          },
-          headers: {
-            Accept: "application/json"
-          }
-        });
-
-
-        setDashboard(dashboardRes.data);
-        setEquipmentList(equipmentRes.data);
-        setFilteredList(equipmentRes.data);
-      } catch (err) {
-        console.error("Error fetching dashboard:", err);
-        setError("Failed to load dashboard data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDashboardData();
+    fetchBorrowings();
+    fetchEquipment();
   }, []);
 
-  // Filter logic for search, category, availability
-  useEffect(() => {
-    let results = equipmentList;
+  // fetch borrowings
+  const fetchBorrowings = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/requests");
+      // ensure data is always array
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.data)
+        ? res.data.data
+        : [];
+      setRequests(data);
+    } 
+    catch (err) {
+      console.error("Error fetching borrowings:", err);
+      alert("Failed to load borrowings.");
+    } 
+    finally {
+      setLoading(false);
+    }
+  };
 
-    if (search.trim()) {
-      results = results.filter((item) =>
-        item.name?.toLowerCase().includes(search.toLowerCase())
-      );
+  // fetch equipments
+  const fetchEquipment = async () => {
+    try {
+      const res = await api.get("/dashboard/available?isAvailable=true");
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.data)
+        ? res.data.data
+        : [];
+      setEquipmentList(data|| []);
+    } 
+    catch (err) {
+      console.warn("Equipment fetch fallback:", err);
+      setEquipmentList([]);
+    }
+  };
+
+  // STUDENT — Submit borrow request
+  const handleRequest = async () => {
+    // check if new request has proper data
+    if (!newRequest.EquipmentId || newRequest.RequestedQuantity < 1) {
+      alert("Please select valid equipment and quantity!");
+      return;
     }
 
-    if (category !== "All") {
-      results = results.filter((item) => item.category === category);
+    // set the payload data
+    const payload = {
+      EquipmentId: Number(newRequest.EquipmentId),
+      RequesterId: currentUser.id, // need to check this and see how is request id set?
+      RequestedQuantity: Number(newRequest.RequestedQuantity),
+      RequestedOn: new Date().toISOString().split("T")[0],
+    };
+
+    try {
+      // sending payload data in post
+      await api.post("/request", payload);
+      alert("Request submitted successfully!");
+      setNewRequest({ EquipmentId: "", RequestedQuantity: 1 });
+      fetchBorrowings();
+    } 
+    catch (err) {
+      const msg =
+        err?.response?.data?.error?.message || err.message || "Unknown error";
+      alert("Error submitting request: " + msg);
     }
+  };
 
-    if (availability !== "All") {
-      const isAvailable = availability === "Available";
-      results = results.filter((item) => item.available === isAvailable);
+  // For approving and handling logic, RequestId is used - check
+  // STAFF / ADMIN — Approve request
+  const handleApprove = async (RequestId) => {
+    try {
+      await api.put(`/approve/${RequestId}`);
+      alert("Request approved!");
+      fetchBorrowings();
+    } 
+    catch (err) {
+      alert("Error approving request: " + err.message);
     }
+  };
 
-    setFilteredList(results);
-  }, [search, category, availability, equipmentList]);
+  // STAFF / ADMIN - Reject request - need separate ?
 
-  if (loading) return <div className="text-center">Loading dashboard...</div>;
-  if (error) return <div className="text-center text-red">{error}</div>;
-  if (!dashboard) return <div>No dashboard data available.</div>;
+  // STAFF / ADMIN — Mark returned
+  const handleReturn = async (RequestId) => {
+    try {
+      await api.put(`/return/${RequestId}`);
+      alert("Marked as returned!");
+      fetchBorrowings();
+    } 
+    catch (err) {
+      alert("Error marking as returned: " + err.message);
+    }
+  };
+
+  // Visible requests based on role  
+  const visibleRequests = Array.isArray(requests)
+    ? role === "ROLE_STUDENT"
+      ? requests.filter((r) => r.RequesterId === currentUser.id)
+      : requests
+    : [];
 
   return (
-    <div className="dashboard-container">
-      {/* LEFT PANEL — Dashboard Summary */}
-      <div className="left-panel card">
-        <h2 className="title">Equipment Dashboard</h2>
+    <div className="container-center">
+      <div className="card" style={{ width: "90%", maxWidth: "1000px" }}>
+        <h2 className="title">Borrowing & Return Management</h2>
 
-        <div className="summary-row">
-          <div className="summary-box total">
-            <h4>Total</h4>
-            <p className="count">{dashboard.totalEquipment}</p>
+        {/* STUDENT — Request Form */}
+        {role === "ROLE_STUDENT" && (
+          <div className="form-section">
+            <h3 className="subtitle">Request Equipment</h3>
+
+            {/* on changing the value, it will set the equipment id in the new request */}
+            <select
+              value={newRequest.EquipmentId}              
+              onChange={(e) =>
+                setNewRequest({ ...newRequest, EquipmentId: e.target.value })
+              }
+              className="input"
+              style={{ marginRight: "10px" }}
+            >
+              {/* this will display the equipment name and available quantity in dropdown*/}
+              <option value="">Select Equipment</option>
+              {equipmentList.map((eq) => (
+                <option key={eq.id} value={eq.id}>
+                  {eq.EquipmentName} (Available: {eq.AvailableQuantity})
+                </option>
+              ))}
+            </select>
+
+            {/* on changing the value, it will set the requested quantity in the new request */}
+            <input
+              type="number"
+              placeholder="Quantity"
+              min="1"
+              value={newRequest.RequestedQuantity}              
+              onChange={(e) =>
+                setNewRequest({
+                  ...newRequest,
+                  RequestedQuantity: Number(e.target.value),
+                })
+              }
+              className="input"
+              style={{ marginRight: "10px" }}
+            />
+
+            {/* on clicking button, handle request function will be called */}
+            <button className="button" onClick={handleRequest}>
+              Submit Request
+            </button>
           </div>
-          <div className="summary-box available">
-            <h4>Available</h4>
-            <p className="count">{dashboard.availableCount}</p>
-          </div>
-          <div className="summary-box lent">
-            <h4>Lent Out</h4>
-            <p className="count">{dashboard.lentOutCount}</p>
-          </div>
-        </div>
+        )}        
 
-        <h3 className="subtitle">By Category</h3>
-        <ul className="category-list">
-          {dashboard.byCategory?.map((item, i) => (
-            <li key={i} className="list-item">
-              <span>{item.category}</span>
-              <span className="badge">{item.count}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* RIGHT PANEL — Equipment Listing */}
-      <div className="right-panel card">
-        <h2 className="title">Equipment Listing & Search</h2>
-
-        <div className="filter-section">
-          <input
-            type="text"
-            placeholder="🔍 Search equipment..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input"
-          />
-
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="input"
-          >
-            <option value="All">All Categories</option>
-            {dashboard.byCategory?.map((cat, i) => (
-              <option key={i} value={cat.category}>
-                {cat.category}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={availability}
-            onChange={(e) => setAvailability(e.target.value)}
-            className="input"
-          >
-            <option value="All">All</option>
-            <option value="Available">Available</option>
-            <option value="Unavailable">Unavailable</option>
-          </select>
-        </div>
-
+        {/* REQUEST TABLE */}
+        <h3 className="subtitle">Requests</h3>
         <div className="table-wrapper">
-          <table className="equipment-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Availability</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredList.length > 0 ? (
-                filteredList.map((eq) => (
-                  <tr key={eq.id}>
-                    <td>{eq.id}</td>
-                    <td>{eq.name}</td>
-                    <td>{eq.category}</td>
-                    <td>
-                      <span
-                        className={`status-badge ${
-                          eq.available
-                            ? "available-badge"
-                            : "unavailable-badge"
-                        }`}
-                      >
-                        {eq.available ? "Available" : "Unavailable"}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+          {loading ? (
+            <p>Loading requests...</p>
+          ) : (
+            <table className="equipment-table">
+              <thead>
                 <tr>
-                  <td colSpan="4" className="text-center text-small">
-                    No equipment found
-                  </td>
+                  <th>ID</th>
+                  <th>Equipment</th>
+                  <th>Quantity</th>
+                  <th>Status</th>
+                  {role !== "ROLE_STUDENT" && <th>Requester</th>}
+                  {(role === "ROLE_STAFF" || role === "ROLE_ADMIN") && (
+                    <th>Actions</th>
+                  )}
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visibleRequests.map((req) => (
+                  <tr key={req.RequestId}>
+                    <td>{req.RequestId}</td>
+                    <td>{req.EquipmentName}</td>
+                    <td>{req.RequestedQuantity}</td>
+                    <td>{req.isApproved ? "Approved" : "Pending"}</td>
+
+                    {/* Check logic for getting requester name */}
+                    {role !== "ROLE_STUDENT" && <td>{req.RequesterName}</td>}
+
+                    {(role === "ROLE_STAFF" || role === "ROLE_ADMIN") && (
+                      <td>
+                        {req.status === "Pending" && (
+                          <button
+                            className="button button-green"
+                            onClick={() => handleApprove(req.id)}
+                          >
+                            Approve
+                          </button>
+                        )}
+
+                        {req.status === "Approved" && (
+                          <button
+                            className="button button-blue"
+                            onClick={() => handleReturn(req.id)}
+                          >
+                            Mark Returned
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // Root react component - main piece of UI
 
-import React from "react";
+//import React from "react";
 
 import { Routes, Route} from "react-router-dom";
 import "./index.css"; // Importing css file globally
@@ -12,6 +12,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import EquipmentDashboard from './pages/EquipmentDashboard';
 import BorrowingRequests from "./pages/BorrowingRequests";
+import EquipmentManagement from './pages/EquipmentManagement';
+import Logout from "./pages/Logout";
 
 function App() {
   return (    
@@ -24,6 +26,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/equipmentdashboard" element={<EquipmentDashboard />} />
           <Route path="/requests" element={<BorrowingRequests />} />
+          <Route path="/equipmentmanagement" element={<EquipmentManagement />} />
+          <Route path="/logout" element={<Logout />} />
         </Routes>
       </div>
     </>

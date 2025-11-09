@@ -2,17 +2,22 @@ import { useEffect, useState } from "react";
 import api from "axios"; // axios instance
 
 export default function BorrowingRequests() {
-  // Logged-in role
+  // fetch the logged in role and user
   const [role] = useState(localStorage.getItem("roles") || "ROLE_STUDENT");
+  const [user] = useState(localStorage.getItem("username"));
 
   // State management
   const [equipmentList, setEquipmentList] = useState([]);
   const [requests, setRequests] = useState([]);
-  const [newRequest, setNewRequest] = useState({ equipmentId: "", quantity: 1 });
-  const [newEquipment, setNewEquipment] = useState({ name: "", availableQty: 1 });
+  const [newRequest, setNewRequest] = useState({ EquipmentId: "", RequestedQuantity: 1 });
+  const [newEquipment, setNewEquipment] = useState({ EquipmentName: "", AvailableQuantity: 1 });
   const [loading, setLoading] = useState(false);
 
   const currentUser = { id: 101, name: "Alice" }; // mock current user
+
+  // Backend URL
+  //const BASE_URL = "https://localhost:7124/api";
+  //const FULL_ENDPOINT = "https://localhost:7124/api/dashboard";
 
   // Load borrowings and equipment
   useEffect(() => {
@@ -20,24 +25,40 @@ export default function BorrowingRequests() {
     fetchEquipment();
   }, []);
 
+  // fetch borrowings
   const fetchBorrowings = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/borrowings");
-      setRequests(res.data);
-    } catch (err) {
+      const res = await api.get("/requests");
+      // ensure data is always array
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.data)
+        ? res.data.data
+        : [];
+      setRequests(data);
+    } 
+    catch (err) {
       console.error("Error fetching borrowings:", err);
       alert("Failed to load borrowings.");
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
 
+  // fetch equipments
   const fetchEquipment = async () => {
     try {
       const res = await api.get("/dashboard/available?isAvailable=true");
-      setEquipmentList(res.data || []);
-    } catch (err) {
+      const data = Array.isArray(res.data)
+        ? res.data
+        : Array.isArray(res.data.data)
+        ? res.data.data
+        : [];
+      setEquipmentList(data|| []);
+    } 
+    catch (err) {
       console.warn("Equipment fetch fallback:", err);
       setEquipmentList([]);
     }
@@ -45,95 +66,67 @@ export default function BorrowingRequests() {
 
   // STUDENT — Submit borrow request
   const handleRequest = async () => {
-    if (!newRequest.equipmentId || newRequest.quantity < 1) {
+    // check if new request has proper data
+    if (!newRequest.EquipmentId || newRequest.RequestedQuantity < 1) {
       alert("Please select valid equipment and quantity!");
       return;
     }
 
+    // set the payload data
     const payload = {
-      equipmentId: Number(newRequest.equipmentId),
-      requesterId: currentUser.id,
-      quantity: Number(newRequest.quantity),
-      requestedOn: new Date().toISOString().split("T")[0],
+      EquipmentId: Number(newRequest.EquipmentId),
+      RequesterId: currentUser.id, // need to check this and see how is request id set?
+      RequestedQuantity: Number(newRequest.RequestedQuantity),
+      RequestedOn: new Date().toISOString().split("T")[0],
     };
 
     try {
+      // sending payload data in post
       await api.post("/request", payload);
       alert("Request submitted successfully!");
-      setNewRequest({ equipmentId: "", quantity: 1 });
+      setNewRequest({ EquipmentId: "", RequestedQuantity: 1 });
       fetchBorrowings();
-    } catch (err) {
+    } 
+    catch (err) {
       const msg =
         err?.response?.data?.error?.message || err.message || "Unknown error";
       alert("Error submitting request: " + msg);
     }
   };
 
-  // STAFF / ADMIN — Approve
-  const handleApprove = async (id) => {
+  // For approving and handling logic, RequestId is used - check
+  // STAFF / ADMIN — Approve request
+  const handleApprove = async (RequestId) => {
     try {
-      await api.put(`/approve/${id}`);
+      await api.put(`/approve/${RequestId}`);
       alert("Request approved!");
       fetchBorrowings();
-    } catch (err) {
+    } 
+    catch (err) {
       alert("Error approving request: " + err.message);
     }
   };
 
+  // STAFF / ADMIN - Reject request - need separate ?
+
   // STAFF / ADMIN — Mark returned
-  const handleReturn = async (id) => {
+  const handleReturn = async (RequestId) => {
     try {
-      await api.put(`/return/${id}`);
+      await api.put(`/return/${RequestId}`);
       alert("Marked as returned!");
       fetchBorrowings();
-    } catch (err) {
+    } 
+    catch (err) {
       alert("Error marking as returned: " + err.message);
     }
   };
 
-  // ADMIN — Add Equipment
-  const handleAddEquipment = async () => {
-    if (!newEquipment.name || newEquipment.availableQty < 1) {
-      alert("Enter valid equipment name and quantity!");
-      return;
-    }
-
-    const payload = {
-      name: newEquipment.name,
-      availableQty: newEquipment.availableQty,
-    };
-
-    try {
-      // Replace with real endpoint if available
-      await api.post("/equipment", payload);
-      alert("Equipment added successfully!");
-      fetchEquipment();
-    } catch (err) {
-      console.warn("Add equipment failed:", err);
-      alert("Backend endpoint for adding equipment not available yet.");
-    }
-
-    setNewEquipment({ name: "", availableQty: 1 });
-  };
-
-  // ADMIN — Delete Equipment
-  const handleDeleteEquipment = async (id) => {
-    try {
-      // Replace with real endpoint if available
-      await api.delete(`/equipment/${id}`);
-      alert("Equipment deleted successfully!");
-      fetchEquipment();
-    } catch (err) {
-      console.warn("Delete equipment failed:", err);
-      alert("Backend endpoint for deleting equipment not available yet.");
-    }
-  };
-
-  // Visible requests based on role
-  const visibleRequests = 
-    role === "ROLE_STUDENT"
-      ? requests.filter((r) => r.requesterId === currentUser.id)
-      : requests;
+  // Visible requests based on role  
+  const visibleRequests = Array.isArray(requests)
+    ? role === "ROLE_STUDENT"
+      ? requests.filter((r) => r.RequesterId === currentUser.id)
+      : requests
+    : [];
 
   return (
     <div className="container-center">
@@ -144,90 +137,47 @@ export default function BorrowingRequests() {
         {role === "ROLE_STUDENT" && (
           <div className="form-section">
             <h3 className="subtitle">Request Equipment</h3>
+
+            {/* on changing the value, it will set the equipment id in the new request */}
             <select
-              value={newRequest.equipmentId}
+              value={newRequest.EquipmentId}              
               onChange={(e) =>
-                setNewRequest({ ...newRequest, equipmentId: e.target.value })
+                setNewRequest({ ...newRequest, EquipmentId: e.target.value })
               }
               className="input"
               style={{ marginRight: "10px" }}
             >
+              {/* this will display the equipment name and available quantity in dropdown*/}
               <option value="">Select Equipment</option>
               {equipmentList.map((eq) => (
                 <option key={eq.id} value={eq.id}>
-                  {eq.name} (Available: {eq.availableQty})
+                  {eq.EquipmentName} (Available: {eq.AvailableQuantity})
                 </option>
               ))}
             </select>
 
+            {/* on changing the value, it will set the requested quantity in the new request */}
             <input
               type="number"
               placeholder="Quantity"
               min="1"
-              value={newRequest.quantity}
+              value={newRequest.RequestedQuantity}              
               onChange={(e) =>
                 setNewRequest({
                   ...newRequest,
-                  quantity: Number(e.target.value),
+                  RequestedQuantity: Number(e.target.value),
                 })
               }
               className="input"
               style={{ marginRight: "10px" }}
             />
 
+            {/* on clicking button, handle request function will be called */}
             <button className="button" onClick={handleRequest}>
               Submit Request
             </button>
           </div>
-        )}
-
-        {/* ADMIN — Manage Equipment */}
-        {role === "ROLE_ADMIN" && (
-          <div className="form-section">
-            <h3 className="subtitle">Manage Equipment</h3>
-            <input
-              type="text"
-              placeholder="Equipment Name"
-              value={newEquipment.name}
-              onChange={(e) =>
-                setNewEquipment({ ...newEquipment, name: e.target.value })
-              }
-              className="input"
-            />
-            <input
-              type="number"
-              placeholder="Available Quantity"
-              min="1"
-              value={newEquipment.availableQty}
-              onChange={(e) =>
-                setNewEquipment({
-                  ...newEquipment,
-                  availableQty: Number(e.target.value),
-                })
-              }
-              className="input"
-            />
-            <button className="button" onClick={handleAddEquipment}>
-              Add Equipment
-            </button>
-
-            <ul className="list">
-              {equipmentList.map((eq) => (
-                <li key={eq.id} className="list-item">
-                  <span>
-                    {eq.name} (Qty: {eq.availableQty})
-                  </span>
-                  <button
-                    className="button button-red"
-                    onClick={() => handleDeleteEquipment(eq.id)}
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        )}        
 
         {/* REQUEST TABLE */}
         <h3 className="subtitle">Requests</h3>
@@ -240,7 +190,7 @@ export default function BorrowingRequests() {
                 <tr>
                   <th>ID</th>
                   <th>Equipment</th>
-                  <th>Qty</th>
+                  <th>Quantity</th>
                   <th>Status</th>
                   {role !== "ROLE_STUDENT" && <th>Requester</th>}
                   {(role === "ROLE_STAFF" || role === "ROLE_ADMIN") && (
@@ -250,12 +200,14 @@ export default function BorrowingRequests() {
               </thead>
               <tbody>
                 {visibleRequests.map((req) => (
-                  <tr key={req.id}>
-                    <td>{req.id}</td>
-                    <td>{req.equipmentName}</td>
-                    <td>{req.quantity}</td>
-                    <td>{req.status}</td>
-                    {role !== "ROLE_STUDENT" && <td>{req.requesterName}</td>}
+                  <tr key={req.RequestId}>
+                    <td>{req.RequestId}</td>
+                    <td>{req.EquipmentName}</td>
+                    <td>{req.RequestedQuantity}</td>
+                    <td>{req.isApproved ? "Approved" : "Pending"}</td>
+
+                    {/* Check logic for getting requester name */}
+                    {role !== "ROLE_STUDENT" && <td>{req.RequesterName}</td>}
 
                     {(role === "ROLE_STAFF" || role === "ROLE_ADMIN") && (
                       <td>
