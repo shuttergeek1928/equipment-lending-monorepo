@@ -6,30 +6,49 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
-@Table(name = "equipment")
+@Table(name = "Equipments")
 @Getter
 @Setter
 @NoArgsConstructor
 public class Equipment {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "Id") // Maps to 'Id'
+    private UUID id;
+
+    @Column(name = "EquipmentId", unique = true)
+    private Integer equipmentId;
 
     @NotBlank
-    private String name;
+    @Column(name = "EquipmentName")
+    private String equipmentName;
 
     @NotBlank
+    @Column(name = "Catgory")
     private String category;
 
-    private String condition; // e.g., "New", "Good", "Fair"
+    @Column(name = "EquipmentCondition")
+    private String equipmentCondition;
 
     @Min(0)
+    @Column(name = "TotalQuantity")
     private int totalQuantity;
 
-    // This would be managed by a future "borrowing" service
-    // For now, we set it equal to totalQuantity
     @Min(0)
+    @Column(name = "AvailableQuantity")
     private int availableQuantity;
+
+    @Column(name = "IsAvailable")
+    private boolean isAvailable;
+
+    @CreationTimestamp
+    @Column(name = "AddedOn", updatable = false)
+    private LocalDate addedOn;
 }

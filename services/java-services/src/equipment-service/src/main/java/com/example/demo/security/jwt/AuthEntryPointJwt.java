@@ -15,10 +15,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * This component handles unauthenticated (401) errors.
- * It's triggered whenever an unauthenticated user tries to access a secured endpoint.
- */
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint {
 

@@ -1,7 +1,7 @@
 ﻿using EquipmentLendingDotnetServices.Data;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EquipmentLendingBackendService.Controllers
 {
@@ -11,9 +11,30 @@ namespace EquipmentLendingBackendService.Controllers
     {
         private readonly ApplicationDbContext _context = context;
 
+        [HttpGet("debug-claims")]
+        [Authorize] // or remove for public debugging
+        public IActionResult DebugClaims()
+        {
+            var name = User.Identity?.Name;
+            var usernameClaim = User.FindFirst("username")?.Value;
+            var sub = User.FindFirst("sub")?.Value;
+            
+            var roles = User.Claims.Where(c => c.Type == "roles" || c.Type == ClaimTypes.Role || c.Type == "role")
+                                   .Select(c => new { c.Type, c.Value }).ToList();
+            
+            var names = User.Claims.Where(c => c.Type == "nameidentifier" || c.Type == ClaimTypes.NameIdentifier)
+                                   .Select(c => new { c.Type, c.Value }).ToList();
+
+            var all = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+
+            return Ok(new { name, usernameClaim, sub, roles, all });
+        }
+
         [HttpGet]
+        [Authorize(Roles = "ROLE_STUDENT")]
         public IActionResult GetAllEquipments()
         {
+            var name = User.Identity.Name ?? User.FindFirst("username")?.Value;
             var equipments = _context.Equipments.ToList();
             return Ok(equipments);
         }

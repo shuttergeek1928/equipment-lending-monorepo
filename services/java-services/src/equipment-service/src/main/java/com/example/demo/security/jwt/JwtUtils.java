@@ -50,9 +50,7 @@ public class JwtUtils {
         return getClaimsFromJwtToken(token).getSubject();
     }
 
-    /**
-     * Extracts the roles (authorities) from the 'roles' claim in the JWT.
-     */
+
     public List<GrantedAuthority> getAuthoritiesFromJwtToken(String token) {
         Claims claims = getClaimsFromJwtToken(token);
 
