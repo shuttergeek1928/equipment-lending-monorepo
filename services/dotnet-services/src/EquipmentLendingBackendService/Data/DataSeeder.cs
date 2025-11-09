@@ -62,12 +62,9 @@ namespace EquipmentLendingDotnetServices.Data
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    UserId = 1,
                     UserName = "admin",
                     Email = "admin@example.com",
                     PasswordHash = adminHash,
-                    PasswordSalt = adminSalt,
-                    UserType = 1,
                     IsActive = true,
                     IsDeleted = false,
                     CreatedAt = DateTime.UtcNow
@@ -75,12 +72,9 @@ namespace EquipmentLendingDotnetServices.Data
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    UserId = 2,
                     UserName = "jdoe",
                     Email = "jdoe@example.com",
                     PasswordHash = studentHash,
-                    PasswordSalt = studentSalt,
-                    UserType = 2,
                     IsActive = true,
                     IsDeleted = false,
                     CreatedAt = DateTime.UtcNow
@@ -98,7 +92,6 @@ namespace EquipmentLendingDotnetServices.Data
                 {
                     // update non-sensitive/profile fields only
                     existing.UserName = u.UserName;
-                    existing.UserType = u.UserType;
                     existing.IsActive = u.IsActive;
                     existing.IsDeleted = u.IsDeleted;
                     existing.UpdatedAt = DateTime.UtcNow;

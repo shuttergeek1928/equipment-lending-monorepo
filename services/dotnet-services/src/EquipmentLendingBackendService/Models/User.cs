@@ -15,15 +15,15 @@ public partial class User
 
     public string PasswordHash { get; set; } = null!;
 
-    public string PasswordSalt { get; set; } = null!;
+    //public string PasswordSalt { get; set; } = null!;
 
-    public int UserType { get; set; }
+    public int? UserType { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
 

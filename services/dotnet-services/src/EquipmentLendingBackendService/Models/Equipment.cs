@@ -23,7 +23,7 @@ public class Equipment
 
     public bool IsAvailable { get; set; } = true;
 
-    public DateOnly AddedOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly? AddedOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
     public virtual ICollection<BorrowingsAndReturns> BorrowingsAndReturns { get; set; } = new List<BorrowingsAndReturns>();
 }

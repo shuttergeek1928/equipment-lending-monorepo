@@ -31,10 +31,9 @@ namespace EquipmentLendingBackendService.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "ROLE_STUDENT")]
+        [Authorize]
         public IActionResult GetAllEquipments()
         {
-            var name = User.Identity.Name ?? User.FindFirst("username")?.Value;
             var equipments = _context.Equipments.ToList();
             return Ok(equipments);
         }
@@ -54,5 +53,14 @@ namespace EquipmentLendingBackendService.Controllers
             var equipments = _context.Equipments.Where(e => e.Catgory.Equals(category)).ToList();
             return Ok(equipments);
         }
+
+        [HttpGet]
+        [Route("users")]
+        public IActionResult getUsers()
+        {
+            var equipments = _context.Users.ToList();
+            return Ok(equipments);
+        }
+
     }
 }

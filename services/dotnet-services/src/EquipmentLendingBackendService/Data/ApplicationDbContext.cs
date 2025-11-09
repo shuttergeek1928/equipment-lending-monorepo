@@ -24,55 +24,185 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // Equipment
+        //modelBuilder.Entity<Equipment>(entity =>
+        //{
+        //    entity.HasKey(e => e.EquipmentId);
+        //    entity.Property(e => e.EquipmentId).ValueGeneratedOnAdd();
+
+        //    entity.Property(e => e.EquipmentName).IsRequired();
+        //    // keep the property name as in the model ("Catgory") – map column type if desired
+        //    entity.Property(e => e.EquipmentCondition).HasDefaultValue("Good");
+        //    entity.Property(e => e.TotalQuantity).HasDefaultValue(1);
+        //    entity.Property(e => e.AvailableQuantity).HasDefaultValue(1);
+        //    entity.Property(e => e.IsAvailable).HasDefaultValue(true);
+
+        //    // DateOnly -> date mapping for PostgreSQL
+        //    entity.Property(e => e.AddedOn)
+        //          .HasColumnType("date")
+        //          .HasConversion(
+        //              v => v.ToDateTime(new TimeOnly(0, 0)),
+        //              v => DateOnly.FromDateTime(v))
+        //          .HasDefaultValueSql("CURRENT_DATE");
+
+        //    entity.HasMany(e => e.BorrowingsAndReturns)
+        //          .WithOne(b => b.Equipment)
+        //          .HasForeignKey(b => b.EquipmentId)
+        //          .OnDelete(DeleteBehavior.Restrict);
+        //});
+
         modelBuilder.Entity<Equipment>(entity =>
         {
-            entity.HasKey(e => e.EquipmentId);
-            entity.Property(e => e.EquipmentId).ValueGeneratedOnAdd();
+            entity.ToTable("equipments", "public"); // or entity.ToTable("equipments") if default schema
 
-            entity.Property(e => e.EquipmentName).IsRequired();
-            // keep the property name as in the model ("Catgory") – map column type if desired
-            entity.Property(e => e.EquipmentCondition).HasDefaultValue("Good");
-            entity.Property(e => e.TotalQuantity).HasDefaultValue(1);
-            entity.Property(e => e.AvailableQuantity).HasDefaultValue(1);
-            entity.Property(e => e.IsAvailable).HasDefaultValue(true);
+            // Primary key (id column is uuid NOT NULL)
+            entity.HasKey(e => e.Id).HasName("pk_equipments_id");
+            entity.Property(e => e.Id)
+                  .HasColumnName("id")
+                  .IsRequired();
 
-            // DateOnly -> date mapping for PostgreSQL
+            // integer equipment_id
+            entity.Property(e => e.EquipmentId)
+                  .HasColumnName("equipment_id")
+                  .IsRequired();
+
+            // equipment_name (varchar) not null
+            entity.Property(e => e.EquipmentName)
+                  .HasColumnName("equipment_name")
+                  .HasMaxLength(255)   // match actual DB length if you know it
+                  .IsRequired();
+
+            // catgory (note: table shows "catgory" spelled this way)
+            entity.Property(e => e.Catgory)
+                  .HasColumnName("catgory")
+                  .HasMaxLength(255)
+                  .IsRequired(false);
+
+            // equipment_condition (nullable)
+            entity.Property(e => e.EquipmentCondition)
+                  .HasColumnName("equipment_condition")
+                  .HasMaxLength(255)
+                  .IsRequired(false);
+
+            // total_quantity integer
+            entity.Property(e => e.TotalQuantity)
+                  .HasColumnName("total_quantity")
+                  .IsRequired();
+
+            // available_quantity integer
+            entity.Property(e => e.AvailableQuantity)
+                  .HasColumnName("available_quantity")
+                  .IsRequired();
+
+            // is_available boolean
+            entity.Property(e => e.IsAvailable)
+                  .HasColumnName("is_available")
+                  .IsRequired();
+
+            // added_on (date)
+            // Map DateOnly to SQL 'date' (Npgsql 6/7+ supports DateOnly)
             entity.Property(e => e.AddedOn)
+                  .HasColumnName("added_on")
                   .HasColumnType("date")
-                  .HasConversion(
-                      v => v.ToDateTime(new TimeOnly(0, 0)),
-                      v => DateOnly.FromDateTime(v))
-                  .HasDefaultValueSql("CURRENT_DATE");
+                  .IsRequired(false);
 
+            // navigation property mapping
             entity.HasMany(e => e.BorrowingsAndReturns)
-                  .WithOne(b => b.Equipment)
-                  .HasForeignKey(b => b.EquipmentId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .WithOne(b => b.Equipment)    // match your borrow entity nav prop
+                  .HasForeignKey("equipment_id") // use the FK column name in DB
+                  .HasConstraintName("fk_borrowings_equipment_id");
         });
 
-        // User
+        //// User
+        //modelBuilder.Entity<User>(entity =>
+        //{
+        //    entity.HasKey(u => u.UserId);
+        //    entity.Property(u => u.UserId).ValueGeneratedOnAdd();
+
+        //    entity.Property(u => u.UserName).IsRequired();
+        //    entity.Property(u => u.Email).IsRequired();
+        //    entity.Property(u => u.PasswordHash).IsRequired();
+        //    entity.Property(u => u.PasswordSalt).IsRequired();
+
+        //    entity.Property(u => u.IsActive).HasDefaultValue(true);
+        //    entity.Property(u => u.IsDeleted).HasDefaultValue(false);
+        //    entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        //    entity.HasMany(u => u.BorrowingsAndReturns)
+        //          .WithOne(b => b.Requester)
+        //          .HasForeignKey(b => b.RequesterId)
+        //          .OnDelete(DeleteBehavior.Restrict);
+
+        //    entity.HasOne(u => u.UserTypeNavigation)
+        //          .WithMany(t => t.Users)
+        //          .HasForeignKey(u => u.UserType)
+        //          .OnDelete(DeleteBehavior.Restrict);
+        //});
+
+
+        modelBuilder.Entity<BorrowingsAndReturns>().Ignore(b => b.Requester);
+        modelBuilder.Entity<BorrowingsAndReturns>().Property(b => b.RequesterId).HasColumnName("requester_id");
+
+        // --- User mapping (map to Java-created users table) ---
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(u => u.UserId);
-            entity.Property(u => u.UserId).ValueGeneratedOnAdd();
+            entity.ToTable("users", "public");
 
-            entity.Property(u => u.UserName).IsRequired();
-            entity.Property(u => u.Email).IsRequired();
-            entity.Property(u => u.PasswordHash).IsRequired();
-            entity.Property(u => u.PasswordSalt).IsRequired();
+            entity.HasKey(u => u.Id).HasName("pk_users_id");
+            entity.Property(u => u.Id).HasColumnName("id").IsRequired();
 
-            entity.Property(u => u.IsActive).HasDefaultValue(true);
-            entity.Property(u => u.IsDeleted).HasDefaultValue(false);
-            entity.Property(u => u.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            // if Java table has a numeric user id column, map it to user_id
+            entity.Property(u => u.UserId).HasColumnName("user_id").IsRequired();
 
-            entity.HasMany(u => u.BorrowingsAndReturns)
-                  .WithOne(b => b.Requester)
-                  .HasForeignKey(b => b.RequesterId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            // provided screenshot shows username/email/passwordhash non-nullable
+            entity.Property(u => u.UserName)
+                  .HasColumnName("username")
+                  .HasMaxLength(255)
+                  .IsRequired();
+
+            entity.Property(u => u.Email)
+                  .HasColumnName("email")
+                  .HasMaxLength(255)
+                  .IsRequired();
+
+            entity.Property(u => u.PasswordHash)
+                  .HasColumnName("passwordhash")
+                  .HasMaxLength(512)
+                  .IsRequired();
+
+            entity.Property(u => u.IsActive)
+                  .HasColumnName("isactive")
+                  .IsRequired(false);
+
+            entity.Property(u => u.IsDeleted)
+                  .HasColumnName("isdeleted")
+                  .IsRequired(false);
+
+            // timestamps - screenshot shows createdat/updatedat/lastaccessedat are nullable (YES)
+            entity.Property(u => u.CreatedAt)
+                  .HasColumnName("createdat")
+                  .HasColumnType("timestamp without time zone")
+                  .IsRequired(false);
+
+            entity.Property(u => u.UpdatedAt)
+                  .HasColumnName("updatedat")
+                  .HasColumnType("timestamp without time zone")
+                  .IsRequired(false);
+
+            entity.Property(u => u.LastAccessedAt)
+                  .HasColumnName("lastaccessedat")
+                  .HasColumnType("timestamp without time zone")
+                  .IsRequired(false);
+
+            // navigation to usertype (if FK exists)
+            // adjust HasForeignKey("user_type") if your schema uses that FK column
+            entity.Property(u => u.UserType)
+                  .HasColumnName("user_type")   // match actual DB column
+                  .IsRequired(false);
 
             entity.HasOne(u => u.UserTypeNavigation)
-                  .WithMany(t => t.Users)
+                  .WithMany(ut => ut.Users)
                   .HasForeignKey(u => u.UserType)
+                  .HasConstraintName("fk_users_usertype")
                   .OnDelete(DeleteBehavior.Restrict);
         });
 

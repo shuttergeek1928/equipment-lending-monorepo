@@ -73,7 +73,7 @@ builder.Services.AddAuthentication(options =>
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(60),
             RoleClaimType = "roles",
-            NameClaimType = "sub"
+            NameClaimType = "userId"
         };
     });
 
@@ -112,23 +112,23 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Seed database (runs migrations and inserts initial data)
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
-    try
-    {
-        var db = services.GetRequiredService<ApplicationDbContext>();
-        // DataSeeder.SeedAsync will apply pending migrations and insert seed data.
-        await DataSeeder.SeedAsync(db);
-        logger.LogInformation("Database seeding completed.");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred while seeding the database.");
-        throw;
-    }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var logger = services.GetRequiredService<ILogger<Program>>();
+//    try
+//    {
+//        var db = services.GetRequiredService<ApplicationDbContext>();
+//        // DataSeeder.SeedAsync will apply pending migrations and insert seed data.
+//        await DataSeeder.SeedAsync(db);
+//        logger.LogInformation("Database seeding completed.");
+//    }
+//    catch (Exception ex)
+//    {
+//        logger.LogError(ex, "An error occurred while seeding the database.");
+//        throw;
+//    }
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
