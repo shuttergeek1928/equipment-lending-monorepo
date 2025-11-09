@@ -5,6 +5,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState("ROLE_STUDENT");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -19,7 +20,7 @@ export default function Signup() {
       const response = await fetch("http://localhost:8081/api/auth/signup", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, password, role: [role]}),
+        body: JSON.stringify({username, email, password, role: [role]}),
       });
 
       // check if response is okay and store token or user info if needed
@@ -60,7 +61,15 @@ export default function Signup() {
             placeholder="Choose a username"
             required
           />
-
+          <label className="label">Email</label>
+          <input
+            type="email"
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email address"
+            required
+          />
           <label className="label">Password</label>
           <input
             type="password"
@@ -70,7 +79,6 @@ export default function Signup() {
             placeholder="Choose a password"
             required
           />
-
           <label className="label">Role</label>
           <select
             className="input"

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"; // used for redirection
 
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("");  
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -24,10 +24,17 @@ export default function Login() {
       // check if response is okay and store token or user info if needed
       if (response.ok) {
         const data = await response.json();
+        
+        // Decode JWT payload (extract userId, username, roles)
+        const tokenParts = data.token.split(".");
+        const payload = JSON.parse(atob(tokenParts[1]));
+
+        // Store data securely
         localStorage.setItem("token", data.token);
-        localStorage.setItem("roles", JSON.stringify(data.roles));
-        localStorage.setItem("username", data.username);
-        setMessage(`Logged in as ${data.username}`);
+        localStorage.setItem("username", payload.sub);
+        localStorage.setItem("roles", JSON.stringify(payload.roles));
+        localStorage.setItem("userId", payload.userId);
+        setMessage(`Logged in as ${payload.sub}`);
 
         //Redirect to dashboard
         navigate("/equipmentdashboard");

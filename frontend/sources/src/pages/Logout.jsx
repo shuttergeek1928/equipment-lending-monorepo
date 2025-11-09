@@ -6,10 +6,11 @@ export default function Logout() {
 
   useEffect(() => {
     // Clear all stored user session data
-    localStorage.removeItem("token");       // If you store JWT or session token
-    localStorage.removeItem("roles");       // If you store user roles
-    localStorage.removeItem("user");        // If you store user info
-    sessionStorage.clear();                 // Optional: clear sessionStorage too
+    localStorage.removeItem("token");       
+    localStorage.removeItem("username"); 
+    localStorage.removeItem("roles");        
+    localStorage.removeItem("userId");       
+    sessionStorage.clear();                 
 
     // Fire custom event so Navbar re-renders
     window.dispatchEvent(new Event("authChanged"));
@@ -18,6 +19,7 @@ export default function Logout() {
     navigate("/");
   }, [navigate]);
 
+  // html structure
   return (
     <div className="text-center mt-5">
       <h4>Logging you out...</h4>
